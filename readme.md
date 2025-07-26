@@ -47,19 +47,6 @@ source venv/bin/activate
 ```bash
 pip install -r requirements.txt
 ```
-
-### 4. Install Google Chrome & ChromeDriver
-
-This extractor relies on Selenium to control a Chrome browser instance.
-
-* **Install Google Chrome:** If not already present, download and install the [Google Chrome Browser](https://www.google.com/chrome/).
-
-* **Download ChromeDriver:**
-    * Visit the official Chrome for Testing availability dashboard: <https://googlechromelabs.github.io/chrome-for-testing/>.
-    * Locate the `chromedriver` version that **precisely matches** your installed Google Chrome browser version.
-    * Download the appropriate `chromedriver` executable for your operating system.
-    * Run the installed .exe file to install chromedriver
-
 ---
 
 ## 🔑 Configuration
