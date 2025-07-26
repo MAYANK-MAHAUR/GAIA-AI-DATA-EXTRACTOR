@@ -26,7 +26,7 @@ To set up and run this project, ensure Python is installed on your system, then 
 Begin by cloning the project repository to your local machine:
 
 ```bash
-git clone https://github.com/MAYANK-MAHAUR/GAIA-DATA-EXTRACTOR.git
+git clone https://github.com/MAYANK-MAHAUR/GAIA-AI-DATA-EXTRACTOR.git
 cd GAIA-DATA-EXTRACTOR
 ```
 
