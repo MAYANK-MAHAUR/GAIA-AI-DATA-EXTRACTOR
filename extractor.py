@@ -96,7 +96,7 @@ Example for a General Informational Page (e.g., Wikipedia):
 }
 """
 
-def get_text_from_url(url, max_bytes_to_read=100 * 1024 * 1024, retries=3, initial_timeout=20):
+def get_text_from_url(url, service_obj, max_bytes_to_read=100 * 1024 * 1024, retries=3, initial_timeout=20):
     temp_file_path = None
     driver = None
 
@@ -120,39 +120,45 @@ def get_text_from_url(url, max_bytes_to_read=100 * 1024 * 1024, retries=3, initi
     for attempt in range(retries):
         print(f"GAIA 🤖 : Attempt {attempt + 1}/{retries}: Fetching {url} with Selenium... ⏳")
 
-        service = Service(ChromeDriverManager().install())
-        driver = webdriver.Chrome(service=service, options=chrome_options)
+        driver = None 
+        try:
+            driver = webdriver.Chrome(service=service_obj, options=chrome_options)
+            driver.set_page_load_timeout(initial_timeout)
+            driver.get(url)
 
-        driver.set_page_load_timeout(initial_timeout)
-        driver.get(url)
+            WebDriverWait(driver, initial_timeout * 2).until(
+                EC.presence_of_element_located((By.TAG_NAME, "body"))
+            )
+            print("GAIA 🤖 : Page content (body tag) found, proceeding to extract. ✅")
 
-        WebDriverWait(driver, initial_timeout * 2).until(
-            EC.presence_of_element_located((By.TAG_NAME, "body"))
-        )
-        print("GAIA 🤖 : Page content (body tag) found, proceeding to extract. ✅")
+            full_html_content = driver.page_source
 
-        full_html_content = driver.page_source
+            soup = BeautifulSoup(full_html_content, 'html.parser')
 
-        soup = BeautifulSoup(full_html_content, 'html.parser')
+            for script_or_style in soup(['script', 'style', 'header', 'footer', 'nav', 'aside', 'noscript']):
+                script_or_style.decompose()
 
-        for script_or_style in soup(['script', 'style', 'header', 'footer', 'nav', 'aside', 'noscript']):
-            script_or_style.decompose()
+            text_content = soup.get_text(separator=' ', strip=True)
+            text_content = ' '.join(text_content.split())
 
-        text_content = soup.get_text(separator=' ', strip=True)
-        text_content = ' '.join(text_content.split())
+            if len(text_content.encode('utf-8')) > max_bytes_to_read:
+                print(f"GAIA 🤖 : Warning: Extracted text content is large ({len(text_content.encode('utf-8')) / (1024*1024):.2f} MB), truncating for temp file. ✂️")
+                text_content = text_content[:max_bytes_to_read]
 
-        if len(text_content.encode('utf-8')) > max_bytes_to_read:
-            print(f"GAIA 🤖 : Warning: Extracted text content is large ({len(text_content.encode('utf-8')) / (1024*1024):.2f} MB), truncating for temp file. ✂️")
-            text_content = text_content[:max_bytes_to_read]
+            with open(temp_file_path, 'w', encoding='utf-8') as f:
+                f.write(text_content)
 
-        with open(temp_file_path, 'w', encoding='utf-8') as f:
-            f.write(text_content)
-
-        print(f"GAIA 🤖 : Extracted text written to temporary file: {temp_file_path} 📝")
-        driver.quit()
-        return temp_file_path
-
-    return None
+            print(f"GAIA 🤖 : Extracted text written to temporary file: {temp_file_path} 📝")
+            return temp_file_path 
+        except Exception as e: 
+            print(f"GAIA 🤖 : Error during Selenium fetch attempt {attempt + 1}: {e} ❌")
+            if attempt == retries - 1:
+                print("GAIA 🤖 : Max retries reached for fetching URL. Returning None. 😔")
+                return None
+        finally:
+            if driver:
+                driver.quit() 
+    return None 
 
 def extract_info_with_gaia_agent(temp_file_path: str) -> tuple[dict, str]:
     with open(temp_file_path, 'r', encoding='utf-8') as f:
@@ -169,7 +175,7 @@ def extract_info_with_gaia_agent(temp_file_path: str) -> tuple[dict, str]:
         response_format={"type": "json_object"}
     )
     llm_response_content = chat_completion.choices[0].message.content
-    extracted_info_dict = json.loads(llm_response_content)
+    extracted_info_dict = json.loads(llm_response_content) 
 
     return extracted_info_dict, text_content
 
@@ -178,6 +184,17 @@ if __name__ == "__main__":
     print("✨ GAIA 🤖 : Universal Smart Data Extractor Initiated ✨")
     print(f"GAIA 🤖 : Connecting to Gaia Domain... 🌐")
     print("========================================================")
+
+    service = None
+    try:
+        print("GAIA 🤖 : Installing Chrome Driver (this happens once)... ⏳")
+        chrome_driver_path = ChromeDriverManager().install()
+        service = Service(chrome_driver_path)
+        print("GAIA 🤖 : Chrome Driver installed successfully. ✅")
+    except Exception as e:
+        print(f"GAIA 🤖 : Error installing Chrome Driver: {e}. Cannot proceed without WebDriver. Exiting. ❌")
+        exit(1) 
+
 
     while True:
         user_url = input("YOU 🙋 : Enter the URL to extract data from (or 'exit' to quit): ").strip()
@@ -194,66 +211,78 @@ if __name__ == "__main__":
         temp_file_to_clean = None
         try:
             print(f"GAIA 🤖 : Attempting to fetch text from: {user_url} 🚀")
-            temp_file_path = get_text_from_url(user_url)
+            temp_file_path = get_text_from_url(user_url, service)
 
             print("========================================================")
             if temp_file_path:
                 temp_file_to_clean = temp_file_path
                 print("GAIA 🤖 : Text fetched and stored in temporary file. Sending to Gaia AI agent for universal extraction... 🧠")
+                try:
+                    extracted_info, full_webpage_text = extract_info_with_gaia_agent(temp_file_path)
+                except json.JSONDecodeError as e:
+                    print(f"GAIA 🤖 : Error: Initial AI extraction response was not valid JSON. {e} ❗")
+                    print("GAIA 🤖 : Please check the Gaia AI agent's response format. 😕")
+                    print("========================================================")
+                    extracted_info = None 
+                    full_webpage_text = None 
 
-                extracted_info, full_webpage_text = extract_info_with_gaia_agent(temp_file_path)
-
-                print("\n========================================================")
-                print("✨ GAIA 🤖 : Extracted Information: ✨")
-                print("========================================================")
-                print(json.dumps(extracted_info, indent=2))
-                print("========================================================")
-
-                if extracted_info and "error" not in extracted_info and full_webpage_text:
+                if extracted_info: 
                     print("\n========================================================")
-                    print("🗣️ GAIA 🤖 : AI-Powered Q&A about the webpage content (Type 'done' to finish Q&A) 💬")
-                    print("GAIA 🤖 : You can now ask ANY question based on the content of the page. 🤔")
+                    print("✨ GAIA 🤖 : Extracted Information: ✨")
+                    print("========================================================")
+                    print(json.dumps(extracted_info, indent=2))
                     print("========================================================")
 
-
-                    qa_system_prompt = "You are a helpful assistant. Answer the user's question ONLY based on the provided webpage content. If the answer is not in the content, state that you cannot find it there."
-                    qa_text_context = full_webpage_text[:8000]
-
-                    while True:
-                        user_question = input("YOU ❓ : Your question: ").strip()
+                    if full_webpage_text: 
+                        print("\n========================================================")
+                        print("🗣️ GAIA 🤖 : AI-Powered Q&A about the webpage content (Type 'done' to finish Q&A) 💬")
+                        print("GAIA 🤖 : You can now ask ANY question based on the content of the page. 🤔")
                         print("========================================================")
-                        if user_question.lower() == 'done':
-                            print("GAIA 🤖 : Ending Q&A session. Returning to main menu. ➡️")
-                            print("========================================================")
-                            break
-
-                        if not qa_text_context:
-                            print("GAIA 🤖 : Error: No text content available for Q&A. 🚫")
-                            print("========================================================")
-                            break
 
 
-                        qa_user_message = f"Based on the following content, please answer the question:\n\nContent:\n{qa_text_context}\n\nQuestion: {user_question}"
+                        qa_system_prompt = "You are a helpful assistant. Answer the user's question ONLY based on the provided webpage content. If the answer is not in the content, state that you cannot find it there."
+                        qa_text_context = full_webpage_text[:8000]
 
-                        try:
-                            qa_completion = client.chat.completions.create(
-                                model=model,
-                                messages=[
-                                    {"role": "system", "content": qa_system_prompt},
-                                    {"role": "user", "content": qa_user_message},
-                                ],
-                            )
-                            qa_answer = qa_completion.choices[0].message.content
-                            print(f"GAIA 💡 : **AI Answer:** {qa_answer}\n")
+                        while True:
+                            user_question = input("YOU ❓ : Your question: ").strip()
                             print("========================================================")
-                        except Exception as e:
-                            print(f"GAIA 🤖 : Error getting AI answer: {e} ❗")
-                            print(f"GAIA 🤖 : Please ensure your Gaia AI agent is running and accessible: {e} 🖥️") # Added error detail
-                            print("========================================================")
-                            break
+                            if user_question.lower() == 'done':
+                                print("GAIA 🤖 : Ending Q&A session. Returning to main menu. ➡️")
+                                print("========================================================")
+                                break
+
+                            if not qa_text_context:
+                                print("GAIA 🤖 : Error: No text content available for Q&A. 🚫")
+                                print("========================================================")
+                                break
+
+
+                            qa_user_message = f"Based on the following content, please answer the question:\n\nContent:\n{qa_text_context}\n\nQuestion: {user_question}"
+
+                            try:
+                                qa_completion = client.chat.completions.create(
+                                    model=model,
+                                    messages=[
+                                        {"role": "system", "content": qa_system_prompt},
+                                        {"role": "user", "content": qa_user_message},
+                                    ],
+                                )
+                                qa_answer = qa_completion.choices[0].message.content
+                                print(f"GAIA 💡 : **AI Answer:** {qa_answer}\n")
+                                print("========================================================")
+                            except Exception as e:
+                                print(f"GAIA 🤖 : Error getting AI answer: {e} ❗")
+                                print(f"GAIA 🤖 : Please ensure your Gaia AI agent is running and accessible or check the LLM response. 🖥️") # Adjusted message
+                                print("========================================================")
+                                break
+                    else: 
+                        print("GAIA 🤖 : Cannot start AI-Powered Q&A due to issues with the initial webpage content. 😕")
+                        print("========================================================")
+
                 else:
-                    print("GAIA 🤖 : Cannot start AI-Powered Q&A as there was an error in extraction or no valid text content was obtained. 😕")
+                    print("GAIA 🤖 : Initial extraction failed or returned invalid data. Skipping Q&A. 😕")
                     print("========================================================")
+
 
             else:
                 print(f"GAIA 🤖 : Failed to get text from {user_url}. 😔")
