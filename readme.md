@@ -15,6 +15,8 @@ A robust Python-based tool designed for comprehensive web content analysis, leve
 
 * **Flexible and Extensible Architecture:** Designed for easy adaptation of extraction prompts and seamless integration with various AI models hosted on your Gaia Domain.
 
+* ~Note:~ It sometimes can provide wrong answers and cannot extract data properly please restart the IDE in this case.
+
 ---
 
 ## 🛠️ Installation
