@@ -103,7 +103,7 @@ Example for a General Informational Page (e.g., Wikipedia):
 """
 
 
-def get_text_from_url(url, max_bytes_to_read=10 * 1024 * 1024, retries=3, initial_timeout=20):
+def get_text_from_url(url, max_bytes_to_read=100 * 1024 * 1024, retries=3, initial_timeout=20):
     temp_file_path = None
     driver = None
 
