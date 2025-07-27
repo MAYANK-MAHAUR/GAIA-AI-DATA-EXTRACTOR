@@ -79,6 +79,10 @@ The script will guide you through the following interactive process:
 
     ![](ENTER_URL.png)
 
+2. **Temporary Storage** It stores the extracted information temporary.
+
+    ![](temporary.png)
+
 2.  **View Extracted Information:** Upon successful processing, the script will display the initial structured JSON data extracted by the Gaia AI Agent.
 
     ![](DATA.png)
