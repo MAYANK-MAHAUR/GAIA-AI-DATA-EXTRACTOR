@@ -241,7 +241,7 @@ if __name__ == "__main__":
 
 
                         qa_system_prompt = "You are a helpful assistant. Answer the user's question ONLY based on the provided webpage content. If the answer is not in the content, state that you cannot find it there."
-                        qa_text_context = full_webpage_text[:8000]
+                        qa_text_context = full_webpage_text[:15000]
 
                         while True:
                             user_question = input("YOU ❓ : Your question: ").strip()
