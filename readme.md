@@ -79,7 +79,7 @@ The script will guide you through the following interactive process:
 
     ![](ENTER_URL.png)
 
-2. **Temporary Storage** It stores the extracted information temporary.
+2. **Temporary Storage** It stores the extracted information temporarily.
 
     ![](temporary.png)
 
