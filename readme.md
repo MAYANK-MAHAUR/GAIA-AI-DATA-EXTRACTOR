@@ -23,6 +23,8 @@ A robust Python-based tool designed for comprehensive web content analysis, leve
 
 To set up and run this project, ensure Python is installed on your system, then follow the steps below:
 
+**Running Script for First time will take time.**
+
 ### 1. Clone the Repository
 
 Begin by cloning the project repository to your local machine:
