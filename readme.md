@@ -31,7 +31,7 @@ Begin by cloning the project repository to your local machine:
 
 ```bash
 git clone https://github.com/MAYANK-MAHAUR/GAIA-AI-DATA-EXTRACTOR.git
-cd GAIA-DATA-EXTRACTOR
+cd GAIA-AI-DATA-EXTRACTOR
 ```
 
 ### 2. Set Up Python Environment
