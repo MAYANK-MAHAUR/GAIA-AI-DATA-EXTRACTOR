@@ -19,9 +19,12 @@ A robust Python-based tool designed for comprehensive web content analysis, leve
 
 ---
 
+
+
 ## 🛠️ Installation
 
 To set up and run this project, ensure Python is installed on your system, then follow the steps below:
+It is recommended to run this script using higher LLMs.
 
 **Running Script for First time will take time.**
 
@@ -31,7 +34,7 @@ Begin by cloning the project repository to your local machine:
 
 ```bash
 git clone https://github.com/MAYANK-MAHAUR/GAIA-AI-DATA-EXTRACTOR.git
-cd GAIA-DATA-EXTRACTOR
+cd GAIA-AI-DATA-EXTRACTOR
 ```
 
 ### 2. Set Up Python Environment
@@ -64,8 +67,11 @@ To enable communication with your Gaia Domain AI Agent, configuration is require
     ```env
     GAIA_DOMAIN_URL=YOUR_DOMAIN_URL # Replace with your actual Gaia Domain URL 
     GAIA_API_KEY=YOUR_GAIA_API_KEY_HERE # Replace with your actual Gaia API Key
+    MODEL=YOUR_MODEL_NAME_HERE # Replace with your actual model name
     ```
 ---
+
+
 
 ## 🚀 Usage
 
@@ -98,6 +104,8 @@ The script will guide you through the following interactive process:
 4.  **Terminate Session:** Type `done` to conclude the Q&A session and proceed to enter a new URL, or type `exit` at the URL prompt to terminate the script.
 
 ---
+
+
 
 ## 💡 How It Works (Under the Hood)
 
