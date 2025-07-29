@@ -1,3 +1,8 @@
+
+# THIS IS THE ORIGINAL CLI VERSION.
+
+# FOR ERRORS PLEASE REFER TO ERRORS_FIX.txt
+
 import requests
 from bs4 import BeautifulSoup
 from openai import OpenAI
@@ -192,7 +197,7 @@ if __name__ == "__main__":
         service = Service(chrome_driver_path)
         print("GAIA 🤖 : Chrome Driver installed successfully. ✅")
     except Exception as e:
-        print(f"GAIA 🤖 : Error installing Chrome Driver: {e}. Cannot proceed without WebDriver. Exiting. ❌")
+        print(f"GAIA 🤖 : Error installing Chrome Driver: {e}. Cannot proceed without WebDriver. Exiting. ❌, Please close this Terminal and run script again.")
         exit(1) 
 
 
@@ -240,7 +245,8 @@ if __name__ == "__main__":
                         print("========================================================")
 
 
-                        qa_system_prompt = "You are a helpful assistant. Answer the user's question ONLY based on the provided webpage content. If the answer is not in the content, state that you cannot find it there."
+       
+                        qa_system_prompt = "You are a highly intelligent, insightful, and adaptable AI assistant of GAIANET. Based on the provided webpage content, answer the user's question. If a direct answer isn't present, use your intelligence to infer, evaluate, or provide a reasoned assessment based on the information and implications of the text. This includes subjective qualities or potential 'ratings' if the content describes features that support such an assessment. Always ensure your response is logically derived from and consistent with the provided content. If an answer truly cannot be formed, state so professionally."
                         qa_text_context = full_webpage_text[:15000]
 
                         while True:

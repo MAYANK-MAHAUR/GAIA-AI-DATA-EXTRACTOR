@@ -1,0 +1,8 @@
+#### THIS FILE IS FOR MOST COMMON ERRORS, FEEL FREE TO REPORT ERRORS.
+
+
+1.  Could not reach host. Are you offline?
+
+GUI_Fix - Retry until Fix(click that start extraction button until it gets fixed automatically 2 to 3 times, if not solved run the script again.)
+
+CLI_Fix - stop the script or close current terminal then run script again(try 2 to 3 times)
