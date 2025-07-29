@@ -128,7 +128,7 @@ def fetch_page_text(url: str, driver_service: Service, max_bytes: int = MAX_BYTE
     if static_text:
         with tempfile.NamedTemporaryFile(delete=False, mode='w', encoding='utf-8', suffix='.txt') as f:
             f.write(static_text)
-            logger.info("Saved static content to temporary file: %s", f.name)
+            logger.info("Saved content to temporary file: %s", f.name)
             return f.name
 
     ua = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
@@ -225,57 +225,42 @@ class GAIAApp(ctk.CTk):
         self._timer_running = False
         self._timer_thread = None
         self._setup_ui()
-        self.extract_btn.configure(command=self._on_extract)
-        self.clear_btn.configure(command=self._clear_fields)
-        self.ask_btn.configure(command=self._on_ask)
-        self.history_clear_btn.configure(command=self._clear_history)
-        self.protocol("WM_DELETE_WINDOW", self._on_closing)
+        self.extract_btn.configure(command=self.on_extract)
+        self.clear_btn.configure(command=self.clear_fields)
+        self.ask_btn.configure(command=self.on_ask)
+        self.history_clear_btn.configure(command=self.clear_history)
+        self.protocol("WM_DELETE_WINDOW", self.on_closing)
 
 
     def _setup_ui(self):
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(1, weight=1)
-
-       
         bg_image = Image.open("./gaia_background.jpg").resize((1920, 1080))
         self.bg_img = ctk.CTkImage(light_image=bg_image, dark_image=bg_image, size=(1920, 1080))
         bg_label = ctk.CTkLabel(self, image=self.bg_img, text="")
         bg_label.place(x=0, y=0, relwidth=1, relheight=1)
         bg_label.lower()
-      
-
-    
         top_frame = ctk.CTkFrame(self, fg_color="#05020F")
         top_frame.grid(row=0, column=0, sticky="ew", padx=10, pady=10)
         top_frame.grid_columnconfigure(0, weight=1)
-
         logo_image = Image.open("./Gaia_Logo_light.png").resize((150, 50))
         self.logo_img = ctk.CTkImage(light_image=logo_image, dark_image=logo_image, size=(150, 50))
         ctk.CTkLabel(top_frame, image=self.logo_img, text="").pack(side="left", padx=10)
         ctk.CTkLabel(top_frame, text="Data Extractor", font=ctk.CTkFont("Arial", 14), text_color="#cccccc").pack(side="left")
-
-        # Tab View
         self.tabview = ctk.CTkTabview(self, fg_color="#05020F", segmented_button_selected_color="#00b7eb")
         self.tabview.grid(row=1, column=0, sticky="nsew", padx=10, pady=10)
         self.tabview.add("Extract")
         self.tabview.add("Q&A")
         self.tabview.add("History")
-
-        # Initialize status and progress widgets before building tabs
         self.status_lbl = ctk.CTkLabel(self.tabview.tab("Extract"), text="", text_color="#cccccc")
         self.timer_lbl = ctk.CTkLabel(self.tabview.tab("Extract"), text="Elapsed: 0s", text_color="#cccccc")
         self.progress_bar = ctk.CTkProgressBar(self.tabview.tab("Extract"), mode="indeterminate", width=300)
-        
         self.q_status_lbl = ctk.CTkLabel(self.tabview.tab("Q&A"), text="", text_color="#cccccc")
         self.q_timer_lbl = ctk.CTkLabel(self.tabview.tab("Q&A"), text="Elapsed: 0s", text_color="#cccccc")
         self.q_progress_bar = ctk.CTkProgressBar(self.tabview.tab("Q&A"), mode="indeterminate", width=300)
-
-        # Build tabs after initializing widgets
         self._build_extract_tab()
         self._build_qa_tab()
         self._build_history_tab()
-
-        # Status Bar
         status_bar = ctk.CTkFrame(self, fg_color="#1c1f26")
         status_bar.grid(row=2, column=0, sticky="ew", padx=10, pady=5)
         self.status_bar_lbl = ctk.CTkLabel(
@@ -374,7 +359,7 @@ class GAIAApp(ctk.CTk):
 
 
 
-    def _clear_history(self):
+    def clear_history(self):
         if not messagebox.askyesno("Confirm Clear", "Are you sure you want to clear the extraction history?"):
             return
         self._history.clear()
@@ -383,7 +368,7 @@ class GAIAApp(ctk.CTk):
         self.status_bar_lbl.configure(text=f"Version {APP_VERSION} | Last Action: {self._last_action}")
 
 
-    def _set_status(self, msg: str, tab: str = "Extract"):
+    def set_status(self, msg: str, tab: str = "Extract"):
         self._last_action = msg or "None"
         self.status_bar_lbl.configure(text=f"Version {APP_VERSION} | Last Action: {self._last_action}")
         if tab == "Extract":
@@ -394,7 +379,7 @@ class GAIAApp(ctk.CTk):
             self.q_status_lbl.update()
 
 
-    def _start_timer(self, tab: str = "Extract"):
+    def start_timer(self, tab: str = "Extract"):
         self._timer_running = True
         start_time = time.time()
         def update_timer():
@@ -412,7 +397,7 @@ class GAIAApp(ctk.CTk):
 
 
 
-    def _stop_timer(self, tab: str = "Extract"):
+    def stop_timer(self, tab: str = "Extract"):
         self._timer_running = False
         if self._timer_thread:
             self._timer_thread.join(timeout=1)
@@ -426,14 +411,7 @@ class GAIAApp(ctk.CTk):
             self.q_progress_bar.grid_remove()
 
 
-
-    def _on_closing(self):
-        self._cleanup_temp_files()
-        self.destroy()
-
-
-
-    def _cleanup_temp_files(self):
+    def cleanup_temp_files(self):
         for tmp in self._temp_files:
             if os.path.exists(tmp):
                 os.remove(tmp)
@@ -441,8 +419,12 @@ class GAIAApp(ctk.CTk):
         self._temp_files.clear()
 
 
+    def on_closing(self):
+        self.cleanup_temp_files()
+        self.destroy()
 
-    def _on_extract(self):
+
+    def on_extract(self):
         url = self.url_entry.get().strip()
         if not url:
             messagebox.showwarning("Invalid Input", "Please enter a URL.")
@@ -453,23 +435,23 @@ class GAIAApp(ctk.CTk):
         self.extract_btn.configure(state="disabled")
         self.clear_btn.configure(state="disabled")
         self.json_box.delete("1.0", "end")
-        self._set_status("Installing chromedriver…")
+        self.set_status("Installing chromedriver…")
         self.progress_bar.grid(row=6, column=0, pady=5, sticky="ew")
         self.progress_bar.start()
         self.timer_lbl.grid(row=7, column=0, pady=5, sticky="ew")
-        self._start_timer()
-        threading.Thread(target=self._do_extract, args=(url,), daemon=True).start()
+        self.start_timer()
+        threading.Thread(target=self.do_extract, args=(url,), daemon=True).start()
 
 
-    def _do_extract(self, url):
+    def do_extract(self, url):
         tmp = None
         try:
             svc = Service(ChromeDriverManager().install())
-            self._set_status("Fetching page…")
+            self.set_status("Fetching page…")
             tmp = fetch_page_text(url, svc)
             if not tmp:
                 raise RuntimeError("Failed to fetch page text after retries.")
-            self._set_status("Extracting JSON…")
+            self.set_status("Extracting JSON…")
             self._temp_files.append(tmp)
             data = extract_structure(tmp)
             with self._lock:
@@ -489,10 +471,10 @@ class GAIAApp(ctk.CTk):
         finally:
             self.extract_btn.configure(state="normal")
             self.clear_btn.configure(state="normal")
-            self._set_status("")
-            self._stop_timer()
+            self.set_status("")
+            self.stop_timer()
 
-    def _clear_fields(self):
+    def clear_fields(self):
         if not messagebox.askyesno("Confirm Clear", "Are you sure you want to clear all fields?"):
             return
         self.url_entry.delete(0, "end")
@@ -503,10 +485,10 @@ class GAIAApp(ctk.CTk):
             self.page_text = ""
         self._last_action = "Cleared fields"
         self.status_bar_lbl.configure(text=f"Version {APP_VERSION} | Last Action: {self._last_action}")
-        self._set_status("")
-        self._set_status("", tab="Q&A")
+        self.set_status("")
+        self.set_status("", tab="Q&A")
 
-    def _on_ask(self):
+    def on_ask(self):
         q = self.q_entry.get().strip()
         if not q:
             messagebox.showwarning("Invalid Input", "Please enter a question.")
@@ -516,14 +498,14 @@ class GAIAApp(ctk.CTk):
             return
         self.ask_btn.configure(state="disabled")
         self.ans_box.delete("1.0", "end")
-        self._set_status("Querying AI…", tab="Q&A")
+        self.set_status("Querying AI…", tab="Q&A")
         self.q_progress_bar.grid(row=6, column=0, pady=5, sticky="ew")
         self.q_progress_bar.start()
         self.q_timer_lbl.grid(row=7, column=0, pady=5, sticky="ew")
-        self._start_timer(tab="Q&A")
-        threading.Thread(target=self._do_ask, args=(q,), daemon=True).start()
+        self.start_timer(tab="Q&A")
+        threading.Thread(target=self.do_ask, args=(q,), daemon=True).start()
 
-    def _do_ask(self, question):
+    def do_ask(self, question):
         try:
             ans = answer_question(self.page_text, question)
             self.ans_box.insert("1.0", ans)
@@ -534,8 +516,8 @@ class GAIAApp(ctk.CTk):
             messagebox.showerror("Error", f"Failed to get answer: {str(e)}")
         finally:
             self.ask_btn.configure(state="normal")
-            self._set_status("", tab="Q&A")
-            self._stop_timer(tab="Q&A")
+            self.set_status("", tab="Q&A")
+            self.stop_timer(tab="Q&A")
             self.status_bar_lbl.configure(text=f"Version {APP_VERSION} | Last Action: {self._last_action}")
 
 if __name__ == "__main__":
