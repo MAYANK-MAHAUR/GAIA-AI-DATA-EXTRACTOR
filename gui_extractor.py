@@ -224,7 +224,7 @@ class GAIAApp(ctk.CTk):
         self._last_action = "None"
         self._timer_running = False
         self._timer_thread = None
-        self._setup_ui()
+        self.setup_ui()
         self.extract_btn.configure(command=self.on_extract)
         self.clear_btn.configure(command=self.clear_fields)
         self.ask_btn.configure(command=self.on_ask)
@@ -232,7 +232,7 @@ class GAIAApp(ctk.CTk):
         self.protocol("WM_DELETE_WINDOW", self.on_closing)
 
 
-    def _setup_ui(self):
+    def setup_ui(self):
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(1, weight=1)
         bg_image = Image.open("./gaia_background.jpg").resize((1920, 1080))
@@ -253,14 +253,14 @@ class GAIAApp(ctk.CTk):
         self.tabview.add("Q&A")
         self.tabview.add("History")
         self.status_lbl = ctk.CTkLabel(self.tabview.tab("Extract"), text="", text_color="#cccccc")
-        self.timer_lbl = ctk.CTkLabel(self.tabview.tab("Extract"), text="Elapsed: 0s", text_color="#cccccc")
+        self.timer_lbl = ctk.CTkLabel(self.tabview.tab("Extract"), text="Elapsed: 0s (expected: 30sec)", text_color="#cccccc")
         self.progress_bar = ctk.CTkProgressBar(self.tabview.tab("Extract"), mode="indeterminate", width=300)
         self.q_status_lbl = ctk.CTkLabel(self.tabview.tab("Q&A"), text="", text_color="#cccccc")
-        self.q_timer_lbl = ctk.CTkLabel(self.tabview.tab("Q&A"), text="Elapsed: 0s", text_color="#cccccc")
+        self.q_timer_lbl = ctk.CTkLabel(self.tabview.tab("Q&A"), text="Elapsed: 0s (expected: 30sec)", text_color="#cccccc")
         self.q_progress_bar = ctk.CTkProgressBar(self.tabview.tab("Q&A"), mode="indeterminate", width=300)
-        self._build_extract_tab()
-        self._build_qa_tab()
-        self._build_history_tab()
+        self.build_extract_tab()
+        self.build_qa_tab()
+        self.build_history_tab()
         status_bar = ctk.CTkFrame(self, fg_color="#1c1f26")
         status_bar.grid(row=2, column=0, sticky="ew", padx=10, pady=5)
         self.status_bar_lbl = ctk.CTkLabel(
@@ -272,7 +272,7 @@ class GAIAApp(ctk.CTk):
         self.status_bar_lbl.pack(side="left", padx=10)
 
 
-    def _build_extract_tab(self):
+    def build_extract_tab(self):
         frm = self.tabview.tab("Extract")
         frm.grid_columnconfigure(0, weight=1)
 
@@ -304,7 +304,7 @@ class GAIAApp(ctk.CTk):
         self.timer_lbl.grid_remove()    
 
 
-    def _build_qa_tab(self):
+    def build_qa_tab(self):
         frm = self.tabview.tab("Q&A")
         frm.grid_columnconfigure(0, weight=1)
 
@@ -333,7 +333,7 @@ class GAIAApp(ctk.CTk):
 
 
 
-    def _build_history_tab(self):
+    def build_history_tab(self):
         frm = self.tabview.tab("History")
         frm.grid_columnconfigure(0, weight=1)
 
@@ -349,7 +349,7 @@ class GAIAApp(ctk.CTk):
 
 
 
-    def _update_history(self):
+    def update_history(self):
         self.history_box.delete("1.0", "end")
         if not self._history:
             self.history_box.insert("1.0", "No extraction history yet.")
@@ -363,7 +363,7 @@ class GAIAApp(ctk.CTk):
         if not messagebox.askyesno("Confirm Clear", "Are you sure you want to clear the extraction history?"):
             return
         self._history.clear()
-        self._update_history()
+        self.update_history()
         self._last_action = "Cleared history"
         self.status_bar_lbl.configure(text=f"Version {APP_VERSION} | Last Action: {self._last_action}")
 
@@ -386,10 +386,10 @@ class GAIAApp(ctk.CTk):
             while self._timer_running:
                 elapsed = int(time.time() - start_time)
                 if tab == "Extract":
-                    self.timer_lbl.configure(text=f"Elapsed: {elapsed}s")
+                    self.timer_lbl.configure(text=f"Elapsed: {elapsed}s (expected: 30s)")
                     self.timer_lbl.update()
                 else:
-                    self.q_timer_lbl.configure(text=f"Elapsed: {elapsed}s")
+                    self.q_timer_lbl.configure(text=f"Elapsed: {elapsed}s (expected: 30s)")
                     self.q_timer_lbl.update()
                 time.sleep(1)
         self._timer_thread = threading.Thread(target=update_timer, daemon=True)
@@ -459,7 +459,7 @@ class GAIAApp(ctk.CTk):
             if data:
                 self.json_box.insert("1.0", json.dumps(data, indent=2))
                 self._history.append((url, data))
-                self._update_history()
+                self.update_history()
             else:
                 self.json_box.insert("1.0", "Error: No data extracted")
                 raise RuntimeError("No valid data extracted from AI")
