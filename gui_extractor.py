@@ -1,3 +1,10 @@
+
+
+# THIS IS THE GUI VERSION.
+
+# FOR ERRORS PLEASE REFER TO ERRORS_FIX.txt
+
+
 import customtkinter as ctk
 import os
 import json
