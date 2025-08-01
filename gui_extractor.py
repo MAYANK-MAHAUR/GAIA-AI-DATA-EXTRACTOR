@@ -4,7 +4,9 @@
 
 # FOR ERRORS PLEASE REFER TO ERRORS_FIX.txt
 
-# MAKE SURE YOU USE A PUBLIC WEBSITE
+# MAKE SURE YOU USE A PUBLIC WEBSITE THAT DONT REQUIRE AUTHENTICATION.
+
+# REMEMBER TO DELETE HISTORY WHEN USING NEW LINK
 
 import customtkinter as ctk
 import os
@@ -119,26 +121,7 @@ QA_SYSTEM_PROMPT = """
 You are a highly intelligent, insightful, and adaptable AI assistant of *GAIANET*(made by gaia, by gaia, of gaia). Based on the provided webpage content, answer the user's question. If a direct answer isn't present, use your intelligence to infer, evaluate, or provide a reasoned assessment based on the information and implications of the text. This includes subjective qualities or potential 'ratings' if the content describes features that support such an assessment. Always ensure your response is logically derived from and consistent with the provided content. If an answer truly cannot be formed, state so professionally.
 """
 
-
-def try_requests_first(url: str) -> str | None:
-        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
-        response = requests.get(url, headers=headers, timeout=10)
-        response.raise_for_status()
-        soup = BeautifulSoup(response.text, 'html.parser')
-        for tag in soup(["script", "style", "header", "footer", "nav", "aside", "noscript"]):
-            tag.decompose()
-        text = " ".join(soup.get_text(separator=" ", strip=True).split())
-        logger.info("Successfully fetched static content for %s", url)
-        return text
-
 def fetch_page_text(url: str, driver_service: Service, max_bytes: int = MAX_BYTES, retries: int = RETRIES, timeout: int = TIMEOUT) -> str | None:
-    static_text = try_requests_first(url)
-    if static_text:
-        with tempfile.NamedTemporaryFile(delete=False, mode='w', encoding='utf-8', suffix='.txt') as f:
-            f.write(static_text)
-            logger.info("Saved content to temporary file: %s", f.name)
-            return f.name
-
     ua = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
     opts = Options()
     for arg in ("--headless", "--no-sandbox", "--disable-gpu", "--disable-dev-shm-usage", "--log-level=3"):
@@ -146,8 +129,6 @@ def fetch_page_text(url: str, driver_service: Service, max_bytes: int = MAX_BYTE
     opts.add_argument(f"user-agent={ua}")
 
     for attempt in range(1, retries + 1):
-        logger.info("Fetch attempt #%d for %s", attempt, url)
-        driver = None
         try:
             driver = webdriver.Chrome(service=driver_service, options=opts)
             driver.set_page_load_timeout(timeout)
@@ -156,24 +137,18 @@ def fetch_page_text(url: str, driver_service: Service, max_bytes: int = MAX_BYTE
             soup = BeautifulSoup(driver.page_source, 'html.parser')
             for tag in soup(["script", "style", "header", "footer", "nav", "aside", "noscript"]):
                 tag.decompose()
-            main_content = soup.find(['main', 'article', {'id': 'content'}])
-            text = main_content.get_text(separator=' ', strip=True) if main_content else soup.get_text(separator=' ', strip=True)
+            text = soup.get_text(separator=' ', strip=True)
             text = " ".join(text.split())
             if len(text.encode('utf-8')) > max_bytes:
-                logger.warning("Content size (%s MB) exceeds limit, truncating to %s bytes", len(text.encode('utf-8')) / (1024*1024), max_bytes)
                 text = text[:max_bytes]
             with tempfile.NamedTemporaryFile(delete=False, mode='w', encoding='utf-8', suffix='.txt') as f:
                 f.write(text)
-                logger.info("Saved dynamic content to temporary file: %s", f.name)
                 return f.name
         except Exception as e:
-            logger.error("Fetch attempt #%d failed for %s: %s", attempt, url, e)
-            if attempt == retries:
-                return None
+            logger.error("Fetch attempt #%d failed: %s", attempt, e)
         finally:
             if driver:
-                    driver.quit()
-                    logger.info("Closed WebDriver for %s", url)
+                driver.quit()
     return None
 
 
