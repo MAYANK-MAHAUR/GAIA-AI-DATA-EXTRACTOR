@@ -14,7 +14,6 @@ import time
 import threading
 import logging
 import validators
-import requests
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 from openai import OpenAI, OpenAIError
